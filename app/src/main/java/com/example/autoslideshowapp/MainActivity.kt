@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.provider.MediaStore
+import android.support.v7.app.AlertDialog
 import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
 import java.net.URI
@@ -21,7 +22,7 @@ class MainActivity : AppCompatActivity() {
     private var mTimer: Timer? = null
     private var mHandler = Handler()
     private var mTimerSec = 0
-    private var next = 0
+//    private var next = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,23 +42,23 @@ class MainActivity : AppCompatActivity() {
 
 
         next_button.setOnClickListener{
-            next += 1
-            if(next < imageUris.size) {
-                imageView.setImageURI(imageUris[next])
-            }else if(next == imageUris.size) {
-                next  = 0
-                imageView.setImageURI(imageUris[next])
+            mTimerSec += 1
+            if(mTimerSec < imageUris.size) {
+                imageView.setImageURI(imageUris[mTimerSec])
+            }else if(mTimerSec == imageUris.size) {
+                mTimerSec  = 0
+                imageView.setImageURI(imageUris[mTimerSec])
             }
 
         }
 
         previous_button.setOnClickListener{
-            next -= 1
-            if(next >= 0) {
-                imageView.setImageURI(imageUris[next])
-            }else if (next < 0){
-                next = imageUris.size-1
-                imageView.setImageURI(imageUris[next])
+            mTimerSec -= 1
+            if(mTimerSec >= 0) {
+                imageView.setImageURI(imageUris[mTimerSec])
+            }else if (mTimerSec < 0){
+                mTimerSec = imageUris.size-1
+                imageView.setImageURI(imageUris[mTimerSec])
 
             }
         }
@@ -71,14 +72,15 @@ class MainActivity : AppCompatActivity() {
                 mTimer = Timer()
                 mTimer!!.schedule(object : TimerTask() {
                     override fun run() {
-                        mTimerSec += 1
+
                         mHandler.post {
-                            if(mTimerSec < imageUris.size){
-                                imageView.setImageURI(imageUris[mTimerSec])
-                            }else if(mTimerSec == imageUris.size) {
+                            mTimerSec += 1
+                            if(mTimerSec == imageUris.size){
                                 mTimerSec = 0
-                                imageView.setImageURI(imageUris[0])
                             }
+
+                            imageView.setImageURI(imageUris[mTimerSec])
+
                         }
                     }
                 }, 2000, 2000)
@@ -98,6 +100,22 @@ class MainActivity : AppCompatActivity() {
             PERMISSIONS_REQUEST_CODE ->
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     getContentsInfo()
+                }else{
+                    next_button.isEnabled = false
+                    previous_button.isEnabled = false
+                    start_button.isEnabled = false
+                    val alertDialogBuilder = AlertDialog.Builder(this)
+                    alertDialogBuilder.setTitle("注意")
+                    alertDialogBuilder.setMessage("アルバムにアクセントできないから画面を表示できません")
+
+                    // 肯定ボタンに表示される文字列、押したときのリスナーを設定する
+                    alertDialogBuilder.setPositiveButton("OK"){dialog, which ->
+                        Log.d("UI_PARTS", "肯定ボタン")
+                    }
+                    // AlertDialogを作成して表示する
+                    val alertDialog = alertDialogBuilder.create()
+                    alertDialog.show()
+
                 }
         }
     }
@@ -123,6 +141,6 @@ class MainActivity : AppCompatActivity() {
             } while (cursor.moveToNext())
         }
         cursor.close()
-        imageView.setImageURI(imageUris[next])
+        imageView.setImageURI(imageUris[mTimerSec])
     }
 }
